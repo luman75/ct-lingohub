@@ -1,4 +1,19 @@
 {
   "name": "ct-import",
-  "version": "0.0.1"
+  "version": "0.0.1",
+  "description": "This is i18n file importer to lingohub. It supports the process of continous translations for projects based on i18n json files.",
+  "dependencies": {
+    "argparse": "^1.0.4",
+    "coffee": "^3.0.3",
+    "command-line-usage": "^2.0.2",
+    "expand-tilde": "^1.2.0",
+    "node-rest-client": "^1.8.0"
+  },
+  "devDependencies": {
+    "coffee": "^3.0.3",
+    "mocha-junit-reporter": "^1.9.1",
+    "mock-fs": "^3.6.0",
+    "mock-fun": "^1.1.2",
+    "should": "^8.2.0"
+  }
 }
