@@ -12,9 +12,9 @@
 
   rewire = require('rewire');
 
-  lingohub = rewire('../lingohub');
-
   path = require('path');
+
+  lingohub = rewire('../lingohub');
 
   auth_token_path = lingohub.auth_token_path;
 

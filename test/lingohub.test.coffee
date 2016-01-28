@@ -3,8 +3,10 @@ should    = require 'should'
 mockfs    = require 'mock-fs'
 fs        = require 'fs'
 rewire    = require 'rewire'
-lingohub  = rewire '../lingohub'
 path      = require('path')
+
+#-------- rewired -------------
+lingohub  = rewire '../lingohub'
 
 
 auth_token_path = lingohub.auth_token_path
