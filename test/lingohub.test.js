@@ -25,7 +25,7 @@
         lingohub.login.should.exist;
         return done();
       });
-      it("should be able to login when there is no file auth_file ", function(done) {
+      it.skip("should be able to login when there is no file auth_file ", function(done) {
         mockfs({});
         return lingohub.login("accountYY", "tokenXX", function(err, data) {
           should.not.exist(err);
@@ -42,7 +42,7 @@
           });
         });
       });
-      return it.skip("should be able to login when there is already file with auth_token", function(done) {
+      return it("should be able to login when there is already file with auth_token", function(done) {
         var obj;
         mockfs((
           obj = {},

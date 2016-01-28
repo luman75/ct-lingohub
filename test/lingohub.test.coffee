@@ -17,7 +17,7 @@ describe 'Basic operations on lingohub', ->
       lingohub.login.should.exist
       done()
 
-    it "should be able to login when there is no file auth_file ", (done) ->
+    it.skip "should be able to login when there is no file auth_file ", (done) ->
       mockfs { }
       lingohub.login  "accountYY", "tokenXX", (err, data) ->
         should.not.exist(err);
@@ -27,7 +27,7 @@ describe 'Basic operations on lingohub', ->
           data.should.deepEqual {"account": "accountYY", "token": "tokenXX"}
           done()
 
-    it.skip "should be able to login when there is already file with auth_token", (done) ->
+    it "should be able to login when there is already file with auth_token", (done) ->
       mockfs { "#{auth_token_path}": JSON.stringify({"account": "myaccount", "token": "mytoken"}) }
       lingohub.login  "accountYY", "tokenXX", (err, data) ->
         should.not.exist(err);
