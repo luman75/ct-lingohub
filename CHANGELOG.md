@@ -4,6 +4,11 @@
 CHANGELOG
 ---------
 
+### 0.2.2
+
+* Removed non-necessary files
+
+
 ### 0.2.1
 
 * script for publishing npm

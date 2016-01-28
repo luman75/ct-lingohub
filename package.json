@@ -1,6 +1,6 @@
 {
   "name": "ct-lingohub",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "description": "This is i18n file importer to lingohub. It supports the process of continous translations for projects based on i18n json files.",
   "dependencies": {
     "argparse": "^1.0.4",
