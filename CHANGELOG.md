@@ -4,6 +4,13 @@
 CHANGELOG
 ---------
 
+### 0.2.1
+
+* script for publishing npm
+* Solution of problem mockfs working on non-existing directories on linux
+* mocha-bamboo-reporter added
+
+
 ### 0.2.0
 
 
