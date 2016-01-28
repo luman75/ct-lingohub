@@ -17,7 +17,7 @@ describe 'Basic operations on lingohub', ->
       lingohub.login.should.exist
       done()
 
-    it.skip "should be able to login when there is no file auth_file ", (done) ->
+    it "should be able to login when there is no file auth_file ", (done) ->
       mockfs { }
       lingohub.login  "accountYY", "tokenXX", (err, data) ->
         should.not.exist(err);
