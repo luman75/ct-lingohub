@@ -42,7 +42,7 @@
           });
         });
       });
-      return it("should be able to login when there is already file with auth_token", function(done) {
+      return it.skip("should be able to login when there is already file with auth_token", function(done) {
         var obj;
         mockfs((
           obj = {},

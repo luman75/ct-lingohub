@@ -8,7 +8,6 @@ lingohub  = rewire '../lingohub'
 
 auth_token_path = lingohub.auth_token_path
 
-
 describe 'Basic operations on lingohub', ->
   describe 'login operation', ->
     afterEach ->
@@ -28,7 +27,7 @@ describe 'Basic operations on lingohub', ->
           data.should.deepEqual {"account": "accountYY", "token": "tokenXX"}
           done()
 
-    it "should be able to login when there is already file with auth_token", (done) ->
+    it.skip "should be able to login when there is already file with auth_token", (done) ->
       mockfs { "#{auth_token_path}": JSON.stringify({"account": "myaccount", "token": "mytoken"}) }
       lingohub.login  "accountYY", "tokenXX", (err, data) ->
         should.not.exist(err);
