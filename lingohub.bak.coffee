@@ -5,7 +5,7 @@
 #
 fs = require 'fs'
 Client = require('node-rest-client').Client;
-client = new Client();
+_client = new Client();
 expandTilde = require('expand-tilde');
 _ = require 'underscore'
 
@@ -14,7 +14,8 @@ authObj =
   token : null
 
 auth_token_path=expandTilde("~/.ct-import.auth")
-
+client  = require 'fs'
+clientAA  = require 'fs'
 #--------------------------------------------------
 # this operation is used to save credential token
 login = (account, token, callback) ->
@@ -88,12 +89,12 @@ getLoginData = (options, callback) ->
 # this function list of projects for currently logged in user
 # @params
 #   callback(err, data) where data ia an object containing information about all projects in the account
-projects = (options, callback)->
+projects = (options, callback) ->
   if _.isFunction options
     callback=options
     options={}
 
-  getLoginData options (err, authObj) ->
+  getLoginData options, (err, authObj) ->
     if err
       callback(err)
     else
@@ -101,7 +102,7 @@ projects = (options, callback)->
         parameters:
           auth_token: authObj.token
 
-      client.get "https://api.lingohub.com/v1/projects.json", args, (data, response) ->
+      clientAA.get2 "https://api.lingohub.com/v1/projects.json", args, (data, response) ->
         if response.statusCode != 200
           callback({code:response.statusCode,  message:"Error. Status Code: #{response.statusCode} #{response.statusMessage}"})
         else

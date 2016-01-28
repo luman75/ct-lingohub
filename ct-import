@@ -16,27 +16,34 @@ projects = subparsers.addParser('projects', {addHelp: true, description: "List a
 projects.addArgument( ['-t', '--token'],    { action: 'store', required: false, help: 'token to be used for accessing Lingogub API' } )
 projects.addArgument( ['-a', '--account'],  { action: 'store', required: false, help: 'account name to be used together with TOKEN' } )
 
-options = parser.parseArgs();
-
-switch options.command
-  when "login"
-    linghub.login options.account, options.token, (err) ->
-        resultPrinter("Login successfuly. Your credentials are saved in ~/.ct-import.auth")
-
-  when "logout"
-    linghub.logout (err) ->
-        resultPrinter("Logged out successfuly")
-
-  when "projects" then console.dir(args);
-  else
-    console.log("else")
-
-
 
 
 
 resultPrinter = (err, msg) ->
   if err
-    console.err(err)
+    console.error "Error occurred"
+    console.error(err)
   else
     console.log("Login successfuly. Your credentials are saved in ~/.ct-import.auth")
+
+
+
+
+options = parser.parseArgs();
+
+switch options.command
+  when "login"
+    linghub.login options.account, options.token, (err) ->
+        resultPrinter(err, "Login successfuly. Your credentials are saved in ~/.ct-import.auth")
+
+  when "logout"
+    linghub.logout (err) ->
+        resultPrinter(err, "Logged out successfuly")
+
+  when "projects"
+    linghub.projects options, (err, data) ->
+      resultPrinter(err, "List of projects #{JSON.stringify(data)}")
+
+  else
+    console.log("else")
+

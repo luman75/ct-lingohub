@@ -1,29 +1,15 @@
 assert    = require 'assert'
-lingohub  = require '../lingohub'
 should    = require 'should'
 mockfs    = require 'mock-fs'
 fs        = require 'fs'
+rewire    = require 'rewire'
+lingohub  = rewire '../lingohub'
+
 
 auth_token_path = lingohub.auth_token_path
 
 
-describe "Mocking Fs tests", ->
-  describe 'read operations', ->
-    beforeEach ->
-      mockfs {'/etc/passwd': "alamakota"}
-
-    afterEach ->
-      mockfs.restore()
-
-    it "should be able to get content of fake file", (done) ->
-      lingohub.testingFs "/etc/passwd", (err, data) ->
-        should.not.exist(err)
-        data.should.equal "alamakota"
-        done()
-
-
 describe 'Basic operations on lingohub', ->
-
   describe 'login operation', ->
     afterEach ->
       mockfs.restore()
@@ -138,10 +124,36 @@ describe 'Basic operations on lingohub', ->
         done()
 
   describe 'projects operation', ->
+    sampleAuth = {account: "myaccount", token: "mytoken"}
+
+    beforeEach ->
+      mockfs { "#{auth_token_path}": JSON.stringify(sampleAuth) }
+
     afterEach ->
       mockfs.restore()
 
-    it "should exist projects operation ", (done) ->
-      lingohub.projects.should.exist
-      done()
+    it "should project return error on received error form API server ", (done) ->
+      # set  a mockup which return 404
+      clientMock =
+        get: (address, args, callback) ->
+          callback(null , {statusCode:804})
+
+      lingohub.__set__ "client", clientMock
+
+      lingohub.projects (err, data) ->
+        should.exist err
+        err.code.should.equal 804
+        done()
+
+
+    it "should pass token to projects ", (done) ->
+      # set  a mockup which return 404
+      clientMock =
+        get: (address, args, callback) ->
+          should.exist args
+          args.parameters.auth_token.should.equal sampleAuth.token
+          done()
+      lingohub.__set__ "client", clientMock
+
+      lingohub.projects (err, data) ->
 
