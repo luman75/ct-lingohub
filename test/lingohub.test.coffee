@@ -4,12 +4,16 @@ mockfs    = require 'mock-fs'
 fs        = require 'fs'
 rewire    = require 'rewire'
 lingohub  = rewire '../lingohub'
+path      = require('path')
 
 
 auth_token_path = lingohub.auth_token_path
 
 describe 'Basic operations on lingohub', ->
   describe 'login operation', ->
+    beforeEach ->
+      mockfs { "#{path.dirname(auth_token_path)}": {} } # create a directory structure on virtual file system for location of auth_token_paths
+
     afterEach ->
       mockfs.restore()
 
@@ -38,6 +42,9 @@ describe 'Basic operations on lingohub', ->
           done()
 
   describe 'logout operation', ->
+    beforeEach ->
+      mockfs { "#{path.dirname(auth_token_path)}": {} } # create a directory structure on virtual file system for location of auth_token_paths
+
     afterEach ->
       mockfs.restore()
 
@@ -62,6 +69,9 @@ describe 'Basic operations on lingohub', ->
           done()
 
   describe 'getLoginData operation', ->
+    beforeEach ->
+      mockfs { "#{path.dirname(auth_token_path)}": {} } # create a directory structure on virtual file system for location of auth_token_paths
+
     afterEach ->
       mockfs.restore()
 
