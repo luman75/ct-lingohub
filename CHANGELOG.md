@@ -4,6 +4,11 @@
 CHANGELOG
 ---------
 
+### 1.1.0
+
+* Define binary command ct-lingohub to be in the path after installation npm
+
+
 ### 1.0.0
 
 * Readme ready
