@@ -61,7 +61,7 @@ projects.addArgument( ['-n', '--no-header'],    { action: 'storeTrue', required:
 projects.addArgument( ['-p', '--project'],      { action: 'store', required: true, help: 'project name to displayed information about' } )
 projects.addArgument( ['-f', '--path'],         { action: 'store', required: false, dest:'path', help: 'save translation file under to path. If not provided default it will save to ./i18n/#{lang}.i18n.json  ' } )
 
-projects = subparsers.addParser('push',         { addHelp: true, description: "pull entire project translation status" })
+projects = subparsers.addParser('push',         { addHelp: true, description: "push all translations files into LinguHubs system." })
 projects.addArgument( ['-t', '--token'],        { action: 'store', required: false, help: 'token to be used for accessing Lingogub API' } )
 projects.addArgument( ['-a', '--account'],      { action: 'store', required: false, help: 'account name to be used together with TOKEN' } )
 projects.addArgument( ['-j', '--json'],         { action: 'storeTrue', required: false, help: 'Print results in json format only' } )
