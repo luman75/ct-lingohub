@@ -4,6 +4,11 @@
 CHANGELOG
 ---------
 
+### 1.1.2
+
+* Github repo added
+
+
 ### 1.1.1
 
 * Installation instruction added
