@@ -208,16 +208,6 @@ describe 'Basic operations on lingohub', ->
           rdata.should.deepEqual data
           done()
 
-    it.only "should generate error when the destination path exists but it's a directory", (done) ->
-      saveToPath = "/d1/d2/d3/test.i18n.json"
-      mockfs {"#{saveToPath}" : {} } # create a fake directory under the same name
-      lang = "es";
-
-      lingohub.saveTranslationToFile saveToPath, data, lang, (err, path) ->
-        should.exist err
-        done()
-
-
     it "should be able to save to file data to default path ", (done) ->
       mockfs { }
       lang = "es";
@@ -273,3 +263,61 @@ describe 'Basic operations on lingohub', ->
           done()
 
 
+  describe 'convertToPath tool lib', ->
+
+    beforeEach ->
+      mockfs { }
+
+    afterEach ->
+      mockfs.restore()
+
+    it "should be there a function convertToPath", (done) ->
+      lingohub.convertToPath.should.exist
+      done()
+
+    it "should return final path from original null", (done) ->
+      lingohub.convertToPath null, "es", (err, rpath) ->
+        should.not.exist err
+        rpath.should.equal  "i18n/es.i18n.json";
+        done()
+
+    it "should return final path if the original path is an existing directory", (done) ->
+      saveToPath = "/test/i18n"
+      mockfs({"#{saveToPath}":{}})
+      lingohub.convertToPath saveToPath, "es", (err, rpath) ->
+        should.not.exist err
+        rpath.should.equal  "/test/i18n/es.i18n.json";
+        done()
+
+    it "should return final path if the original path is non-existing file", (done) ->
+      saveToPath = "/test/i18n.json"
+      lingohub.convertToPath saveToPath, "es", (err, rpath) ->
+        should.not.exist err
+        rpath.should.equal  saveToPath
+        done()
+
+    it "should return final path if the original path is already existing file", (done) ->
+      saveToPath = "/test/i18n.json"
+      mockfs({"#{saveToPath}":"Existing content"})
+      lingohub.convertToPath saveToPath, "es", (err, rpath) ->
+        should.not.exist err
+        rpath.should.equal  saveToPath
+        done()
+
+    it "should prepare missing direcotries on the path", (done) ->
+      saveToPath = "/dir1/dir2/dir3/test/i18n.json"
+      lingohub.convertToPath saveToPath, "es", (err, rpath) ->
+        should.not.exist err
+        rpath.should.equal saveToPath
+        fs.stat "/dir1/dir2/dir3/test" , (err, stats) ->
+          should.not.exist err
+          stats.isDirectory().should.equal true
+          done()
+
+    it "should return error if it's not possible to create dir", (done) ->
+      saveToPath = "/dir1/dir2/dir3/test/i18n.json"
+      mockfs({"/dir1/dir2":"Existing content"}) #/dir1/dir2 is in fact existing file
+
+      lingohub.convertToPath saveToPath, "es", (err, rpath) ->
+        should.exist err
+        done()

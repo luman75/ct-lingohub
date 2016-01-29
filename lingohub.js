@@ -112,7 +112,7 @@ projects = function(options, callback) {
         options = {};
     }
 
-    return getLoginData(options, function(err, authObj) {
+    getLoginData(options, function(err, authObj) {
         var args;
         if (err) {
             return callback(err);
@@ -206,6 +206,46 @@ getProjectLocales = function(project, options, callback) {
     });
 };
 
+//#--------------------------------------------------
+//# convert path to actual file path. The algorithm depends on if path param is a directory or not
+//# it should
+//# @params
+//#     path - proposed path might be null then we go to default
+//#     lang - current lang we are processing
+//#     callback(err, path) - returns the outcome of this function
+convertToPath = function(path, lang, callback){
+    if (typeof path === "undefined" || path === null){
+        path = "i18n/" + lang + ".i18n.json";
+    }
+    var basepath;
+    if (path.substr(path.length-1,1) == "/"){
+        basepath = path;
+    }else{
+        basepath = Path.dirname(path);
+    }
+
+    mkdirp(basepath, function(err) {
+        if (err){
+            callback(err);
+        }else {
+            fs.stat(path, function (err, stats) {
+                if (err) {
+                    callback(null, path);
+                } else {
+                    if (stats.isDirectory()) {
+                        if (path.substr(path.length-1,1) != "/") {
+                            path = path + "/";
+                        }
+                        path = path + lang + ".i18n.json";
+                        callback(null, path);
+                    } else {
+                        callback(null, path);
+                    }
+                }
+            });
+        }
+    });
+}
 
 //#--------------------------------------------------
 //# saves tranaltion data to file.
@@ -215,19 +255,13 @@ getProjectLocales = function(project, options, callback) {
 //#   lang   - language code
 //#   callback(err, path) - return error or path under the file was finally saved
 saveTranslationToFile = function(path, data, lang, callback){
-    if (typeof path === "undefined" || path === null){
-        path = "i18n/" + lang + ".i18n.json";
-    }
-
-    var basepath = Path.dirname(path);
-
-    mkdirp(basepath, function(err){
+    convertToPath(path, lang , function(err, path){
         if (err){
             callback(err);
         }else{
             fs.writeFile(path, data, function(err){
                 if (err){
-                    callback(err);
+                    callback(err, path);
                 } else {
                     callback(null, path);
                 }
@@ -243,17 +277,20 @@ saveTranslationToFile = function(path, data, lang, callback){
 //#   lang   - language code
 //#   callback(err, path) - return error or path under the file was finally saved
 readTranslationFile = function(path, lang, callback){
-    if (typeof path === "undefined" || path === null){
-        path = "i18n/" + lang + ".i18n.json";
-    }
-
-    fs.readFile(path, 'utf8',  function(err, data){
+    convertToPath(path, lang , function(err, path) {
         if (err){
             callback(err);
-        } else {
-            callback(null, path,  data);
+        }else {
+            fs.readFile(path, 'utf8', function (err, data) {
+                if (err) {
+                    callback(err, path);
+                } else {
+                    callback(null, path, data);
+                }
+            });
         }
     });
+
 };
 
 
@@ -374,7 +411,7 @@ uploadSrcFile = function(project, lang, srcPath,  options,  callback) {
         } else {
             readTranslationFile(srcPath, lang, function(err, path,  data){
                 if (err){
-                    callback(err);
+                    callback(err,path);
                 }else{
                     formData = {
                         iso2_slug: lang,
@@ -390,7 +427,7 @@ uploadSrcFile = function(project, lang, srcPath,  options,  callback) {
 
                     request.post({url:'https://api.lingohub.com/v1/'+ authObj.account +'/projects/'+ project +'/resources.json?auth_token='+authObj.token, formData: formData}, function optionalCallback(err, httpResponse, body) {
                         if (err) {
-                            callback(err);
+                            callback(err, path);
                         }else{
                             callback(null, path);
                         }
@@ -468,4 +505,5 @@ exports.uploadSrcFile = uploadSrcFile;
 exports.saveTranslationToFile = saveTranslationToFile;
 exports.pullAllTransaltions = pullAllTransaltions;
 exports.pushAllFiles = pushAllFiles;
+exports.convertToPath = convertToPath;
 exports.auth_token_path = auth_token_path;

@@ -20,7 +20,6 @@ projects.addArgument( ['-a', '--account'],      { action: 'store', required: fal
 projects.addArgument( ['-j', '--json'],         { action: 'storeTrue', required: false, help: 'Print results in json format only' } )
 projects.addArgument( ['-n', '--no-header'],    { action: 'storeTrue', required: false, help: 'Do not print any headers for the results - just data' } )
 
-
 projects = subparsers.addParser('project-info', { addHelp: true, description: "Get detailed inforamtion about a particular project" })
 projects.addArgument( ['-t', '--token'],        { action: 'store', required: false, help: 'token to be used for accessing Lingogub API' } )
 projects.addArgument( ['-a', '--account'],      { action: 'store', required: false, help: 'account name to be used together with TOKEN' } )
@@ -69,8 +68,6 @@ projects.addArgument( ['-j', '--json'],         { action: 'storeTrue', required:
 projects.addArgument( ['-n', '--no-header'],    { action: 'storeTrue', required: false, dest:'noheader', help: 'Do not print any headers for the results - just data' } )
 projects.addArgument( ['-p', '--project'],      { action: 'store', required: true, help: 'project name to displayed information about' } )
 projects.addArgument( ['-f', '--path'],         { action: 'store', required: false, dest:'path', help: 'save translation file under to path. If not provided default it will save to ./i18n/#{lang}.i18n.json  ' } )
-
-
 
 
 resultPrinter = (err, msg, options, data) ->

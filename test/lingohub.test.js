@@ -340,20 +340,6 @@
           });
         });
       });
-      it.only("should generate error when the destination path exists but it's a directory", function(done) {
-        var lang, obj, saveToPath;
-        saveToPath = "/d1/d2/d3/test.i18n.json";
-        mockfs((
-          obj = {},
-          obj["" + saveToPath] = {},
-          obj
-        ));
-        lang = "es";
-        return lingohub.saveTranslationToFile(saveToPath, data, lang, function(err, path) {
-          should.exist(err);
-          return done();
-        });
-      });
       return it("should be able to save to file data to default path ", function(done) {
         var lang;
         mockfs({});
@@ -369,7 +355,7 @@
         });
       });
     });
-    return describe('getTranslationFile operation', function() {
+    describe('getTranslationFile operation', function() {
       var lang, project, sampleAuth, sampleData, saveTo;
       sampleAuth = {
         account: "myaccount",
@@ -424,6 +410,86 @@
             rdata.should.deepEqual(sampleData);
             return done();
           });
+        });
+      });
+    });
+    return describe('convertToPath tool lib', function() {
+      beforeEach(function() {
+        return mockfs({});
+      });
+      afterEach(function() {
+        return mockfs.restore();
+      });
+      it("should be there a function convertToPath", function(done) {
+        lingohub.convertToPath.should.exist;
+        return done();
+      });
+      it("should return final path from original null", function(done) {
+        return lingohub.convertToPath(null, "es", function(err, rpath) {
+          should.not.exist(err);
+          rpath.should.equal("i18n/es.i18n.json");
+          return done();
+        });
+      });
+      it("should return final path if the original path is an existing directory", function(done) {
+        var obj, saveToPath;
+        saveToPath = "/test/i18n";
+        mockfs((
+          obj = {},
+          obj["" + saveToPath] = {},
+          obj
+        ));
+        return lingohub.convertToPath(saveToPath, "es", function(err, rpath) {
+          should.not.exist(err);
+          rpath.should.equal("/test/i18n/es.i18n.json");
+          return done();
+        });
+      });
+      it("should return final path if the original path is non-existing file", function(done) {
+        var saveToPath;
+        saveToPath = "/test/i18n.json";
+        return lingohub.convertToPath(saveToPath, "es", function(err, rpath) {
+          should.not.exist(err);
+          rpath.should.equal(saveToPath);
+          return done();
+        });
+      });
+      it("should return final path if the original path is already existing file", function(done) {
+        var obj, saveToPath;
+        saveToPath = "/test/i18n.json";
+        mockfs((
+          obj = {},
+          obj["" + saveToPath] = "Existing content",
+          obj
+        ));
+        return lingohub.convertToPath(saveToPath, "es", function(err, rpath) {
+          should.not.exist(err);
+          rpath.should.equal(saveToPath);
+          return done();
+        });
+      });
+      it("should prepare missing direcotries on the path", function(done) {
+        var saveToPath;
+        saveToPath = "/dir1/dir2/dir3/test/i18n.json";
+        return lingohub.convertToPath(saveToPath, "es", function(err, rpath) {
+          should.not.exist(err);
+          rpath.should.equal(saveToPath);
+          return fs.stat("/dir1/dir2/dir3/test", function(err, stats) {
+            should.not.exist(err);
+            stats.isDirectory().should.equal(true);
+            return done();
+          });
+        });
+      });
+      return it("should return error if it's not possible to create dir", function(done) {
+        var saveToPath;
+        saveToPath = "/dir1/dir2/dir3/test/i18n.json";
+        mockfs({
+          "/dir1/dir2": "Existing content"
+        });
+        return lingohub.convertToPath(saveToPath, "es", function(err, rpath) {
+          should.exist(err);
+          return done();
         });
       });
     });

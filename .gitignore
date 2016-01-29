@@ -79,3 +79,6 @@ node_modules
 
 # test-unit reporter
 test-results.xml
+
+#ignore test data
+i18n/
