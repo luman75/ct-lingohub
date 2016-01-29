@@ -3,6 +3,7 @@
   "version": "1.1.1",
   "description": "This is i18n file importer to lingohub. It supports the process of continous translations for projects based on i18n json files.",
   "license": "MIT",
+  "repository": "https://github.com/luman75/ct-lingohub.git",
   "dependencies": {
     "argparse": "^1.0.4",
     "async": "^1.5.2",
