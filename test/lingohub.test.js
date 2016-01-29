@@ -247,7 +247,7 @@
         });
       });
     });
-    return describe('projects operation', function() {
+    describe('projects operation', function() {
       var sampleAuth;
       sampleAuth = {
         account: "myaccount",
@@ -291,6 +291,140 @@
         };
         lingohub.__set__("client", clientMock);
         return lingohub.projects(function(err, data) {});
+      });
+    });
+    describe('saveTranslationToFile', function() {
+      var data;
+      data = new Buffer('this is a test');
+      beforeEach(function() {
+        return mockfs({});
+      });
+      afterEach(function() {
+        return mockfs.restore();
+      });
+      it("should exist saveTranslationToFile operation ", function(done) {
+        lingohub.saveTranslationToFile.should.exist;
+        return done();
+      });
+      it("should be able to save to file data if path is provided ", function(done) {
+        var lang, saveToPath;
+        mockfs({});
+        saveToPath = "/d1/d2/d3/test.i18n.json";
+        lang = "es";
+        return lingohub.saveTranslationToFile(saveToPath, data, lang, function(err, path) {
+          should.not.exist(err);
+          path.should.equal(saveToPath);
+          return fs.readFile(path, function(err, rdata) {
+            should.not.exists(err);
+            rdata.should.deepEqual(data);
+            return done();
+          });
+        });
+      });
+      it("should be able to save to file data if path is provided and the destination file already exists", function(done) {
+        var lang, obj, saveToPath;
+        saveToPath = "/d1/d2/d3/test.i18n.json";
+        mockfs((
+          obj = {},
+          obj["" + saveToPath] = "existing data",
+          obj
+        ));
+        lang = "es";
+        return lingohub.saveTranslationToFile(saveToPath, data, lang, function(err, path) {
+          should.not.exist(err);
+          path.should.equal(saveToPath);
+          return fs.readFile(path, function(err, rdata) {
+            should.not.exists(err);
+            rdata.should.deepEqual(data);
+            return done();
+          });
+        });
+      });
+      it.only("should generate error when the destination path exists but it's a directory", function(done) {
+        var lang, obj, saveToPath;
+        saveToPath = "/d1/d2/d3/test.i18n.json";
+        mockfs((
+          obj = {},
+          obj["" + saveToPath] = {},
+          obj
+        ));
+        lang = "es";
+        return lingohub.saveTranslationToFile(saveToPath, data, lang, function(err, path) {
+          should.exist(err);
+          return done();
+        });
+      });
+      return it("should be able to save to file data to default path ", function(done) {
+        var lang;
+        mockfs({});
+        lang = "es";
+        return lingohub.saveTranslationToFile(null, data, lang, function(err, path) {
+          should.not.exist(err);
+          path.should.equal("i18n/" + lang + ".i18n.json");
+          return fs.readFile(path, function(err, rdata) {
+            should.not.exists(err);
+            rdata.should.deepEqual(data);
+            return done();
+          });
+        });
+      });
+    });
+    return describe('getTranslationFile operation', function() {
+      var lang, project, sampleAuth, sampleData, saveTo;
+      sampleAuth = {
+        account: "myaccount",
+        token: "mytoken"
+      };
+      sampleData = new Buffer('this is a test');
+      project = "testproject";
+      lang = "es";
+      saveTo = "/mypath/i18.es.json";
+      beforeEach(function() {
+        var obj;
+        return mockfs((
+          obj = {},
+          obj["" + auth_token_path] = JSON.stringify(sampleAuth),
+          obj
+        ));
+      });
+      afterEach(function() {
+        return mockfs.restore();
+      });
+      it("should getTranslationFile return error on received error form API server ", function(done) {
+        var clientMock;
+        clientMock = {
+          get: function(address, args, callback) {
+            return callback(null, {
+              statusCode: 804
+            });
+          }
+        };
+        lingohub.__set__("client", clientMock);
+        return lingohub.getTranslationFile(project, lang, saveTo, function(err, rpath) {
+          should.exist(err);
+          err.code.should.equal(804);
+          return done();
+        });
+      });
+      return it("should save received data under right path", function(done) {
+        var clientMock;
+        clientMock = {
+          get: function(address, args, callback) {
+            return callback(sampleData, {
+              statusCode: 200
+            });
+          }
+        };
+        lingohub.__set__("client", clientMock);
+        return lingohub.getTranslationFile(project, lang, saveTo, function(err, rpath) {
+          should.not.exist(err);
+          saveTo.should.equal(rpath);
+          return fs.readFile(rpath, function(err, rdata) {
+            should.not.exists(err);
+            rdata.should.deepEqual(sampleData);
+            return done();
+          });
+        });
       });
     });
   });

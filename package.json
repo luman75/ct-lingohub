@@ -2,12 +2,16 @@
   "name": "ct-lingohub",
   "version": "0.2.2",
   "description": "This is i18n file importer to lingohub. It supports the process of continous translations for projects based on i18n json files.",
+  "license": "MIT",
   "dependencies": {
     "argparse": "^1.0.4",
+    "async": "^1.5.2",
     "coffee": "^3.0.3",
     "command-line-usage": "^2.0.2",
     "expand-tilde": "^1.2.0",
+    "mkdirp": "^0.5.1",
     "node-rest-client": "^1.8.0",
+    "request": "^2.69.0",
     "underscore": "^1.8.3"
   },
   "devDependencies": {

@@ -3,6 +3,10 @@ var Client = require('node-rest-client').Client;
 var client = new Client();
 var expandTilde = require('expand-tilde');
 var _ = require('underscore');
+var mkdirp = require('mkdirp');
+var Path = require('path');
+var request = require('request');
+var async = require('async');
 
 var authObj = {
     account: null,
@@ -107,6 +111,7 @@ projects = function(options, callback) {
         callback = options;
         options = {};
     }
+
     return getLoginData(options, function(err, authObj) {
         var args;
         if (err) {
@@ -124,7 +129,22 @@ projects = function(options, callback) {
                         message: "Error. Status Code: " + response.statusCode + " " + response.statusMessage
                     });
                 } else {
-                    return callback(null, data);
+                    var output;
+
+                    if (options.json){
+                        output=data;
+                    }else{
+                        output = [];
+                        if (data.members && _.isArray(data.members)){
+                            data.members.forEach(function(currentValue){
+                                if (_.isObject(currentValue) && currentValue.title){
+                                    output.push(currentValue.title)
+                                }
+                            });
+                        }
+                    }
+
+                    return callback(null, output);
                 }
             });
         }
@@ -136,31 +156,37 @@ projects = function(options, callback) {
 //# @params
 //#   project - name of the procject in lingohub
 //#   callback(err, data) - error or project object
-getProject = function(project, callback) {
-    var args;
-    if ((typeof auth_token === "undefined" || auth_token === null) || (typeof account === "undefined" || account === null)) {
-        callback({
-            message: "You need to login first"
-        });
-        return;
+getProject = function(project, options, callback) {
+    if (_.isFunction(options)) {
+        callback = options;
+        options = {};
     }
-    args = {
-        path: {
-            account: account,
-            project: project
-        },
-        parameters: {
-            auth_token: auth_token
-        }
-    };
-    return client.get("https://api.lingohub.com/v1/${account}/projects/${project}.json", args, function(data, response) {
-        if (response.statusCode !== 200) {
-            return callback({
-                code: response.statusCode,
-                message: "Error. Status Code: " + response.statusCode + " " + response.statusMessage
-            });
+
+    getLoginData(options, function(err, authObj) {
+        if (err) {
+            return callback(err);
         } else {
-            return callback(null, data);
+
+            var args = {
+                path: {
+                    account: authObj.account,
+                    project: project
+                },
+                parameters: {
+                    auth_token: authObj.token
+                }
+            };
+
+            client.get("https://api.lingohub.com/v1/${account}/projects/${project}.json", args, function (data, response) {
+                if (response.statusCode !== 200) {
+                    return callback({
+                        code: response.statusCode,
+                        message: "Error. Status Code: " + response.statusCode + " " + response.statusMessage
+                    });
+                } else {
+                    return callback(null, data);
+                }
+            });
         }
     });
 };
@@ -170,12 +196,62 @@ getProject = function(project, callback) {
 //# @params
 //#     project
 //#     callback(err, locales) - returns errors or array of of locales
-getProjectLocales = function(project, callback) {
-    return getProject(project, function(err, data) {
+getProjectLocales = function(project, options, callback) {
+    return getProject(project, options, function(err, data) {
         if (err) {
             return callback(err);
         } else {
             return callback(null, data.project_locales);
+        }
+    });
+};
+
+
+//#--------------------------------------------------
+//# saves tranaltion data to file.
+//# @params
+//#   path   - path under the file should be storedd
+//#   data   - data buffer to save
+//#   lang   - language code
+//#   callback(err, path) - return error or path under the file was finally saved
+saveTranslationToFile = function(path, data, lang, callback){
+    if (typeof path === "undefined" || path === null){
+        path = "i18n/" + lang + ".i18n.json";
+    }
+
+    var basepath = Path.dirname(path);
+
+    mkdirp(basepath, function(err){
+        if (err){
+            callback(err);
+        }else{
+            fs.writeFile(path, data, function(err){
+                if (err){
+                    callback(err);
+                } else {
+                    callback(null, path);
+                }
+            });
+        }
+    });
+};
+
+//#--------------------------------------------------
+//# read translation file to buffer
+//# @params
+//#   path   - path under the file is stored
+//#   lang   - language code
+//#   callback(err, path) - return error or path under the file was finally saved
+readTranslationFile = function(path, lang, callback){
+    if (typeof path === "undefined" || path === null){
+        path = "i18n/" + lang + ".i18n.json";
+    }
+
+    fs.readFile(path, 'utf8',  function(err, data){
+        if (err){
+            callback(err);
+        } else {
+            callback(null, path,  data);
         }
     });
 };
@@ -188,33 +264,95 @@ getProjectLocales = function(project, callback) {
 //#   lang      - lang code like es, en or pt-BR
 //#   saveTo [optional] - path where the data should be saved, if the parameter is not available we won't save
 //#   callback(err, data) - return error or buffer
-getFile = function(project, lang, saveTo, callback) {
-    var args;
-    if ((typeof auth_token === "undefined" || auth_token === null) || (typeof account === "undefined" || account === null)) {
-        callback("You need to login first");
-        return;
+getTranslationFile = function(project, lang, saveTo, options, callback) {
+
+    if (_.isFunction(options)) {
+        callback = options;
+        options = {};
     }
-    args = {
-        path: {
-            account: account,
-            project: project,
-            lang: lang
-        },
-        parameters: {
-            auth_token: auth_token
-        }
-    };
-    return client.get("https://api.lingohub.com/v1/${account}/projects/${project}/resources/${lang}.i18n.json", args, function(data, response) {
-        if (response.statusCode !== 200) {
-            return callback({
-                code: response.statusCode,
-                message: "Error. Status Code: " + response.statusCode + " " + response.statusMessage
-            });
+
+    getLoginData(options, function(err, authObj) {
+        if (err) {
+            return callback(err);
         } else {
-            return callback(null, data);
+
+            args = {
+                path: {
+                    lang: lang,
+                    account: authObj.account,
+                    project: project
+                },
+                parameters: {
+                    auth_token: authObj.token
+                }
+            };
+            client.get("https://api.lingohub.com/v1/${account}/projects/${project}/resources/${lang}.i18n.json", args, function(data, response) {
+                if (response.statusCode !== 200) {
+                    return callback({
+                        code: response.statusCode,
+                        message: "Error. Status Code: " + response.statusCode + " " + response.statusMessage
+                    });
+                } else {
+                    saveTranslationToFile(saveTo, data, lang, function(err, path){
+                        callback(err, path);
+                    });
+
+                }
+            });
         }
     });
+
 };
+
+
+//#--------------------------------------------------
+//# pull all transalations for a project and save it to localdirectory.
+//# @params
+//#   project   - name of the project
+//#   saveTo [optional] - path where the data should be saved, if the parameter is not available it will save the code to local i18n directory
+//#   callback(err, data) - return error or buffer
+pullAllTransaltions = function(project, saveTo, options, callback) {
+
+    if (_.isFunction(options)) {
+        callback = options;
+        options = {};
+    }
+
+    getLoginData(options, function(err, authObj) {
+        if (err) {
+            return callback(err);
+        } else {
+
+            getProjectLocales(project, options, function(err, locales){
+               if (err){
+                   callback(err);
+               } else{
+                    var pulledLangs = [];
+
+                    function iterator (lang, callback){
+                        getTranslationFile(project, lang, saveTo, options,function(err, path){
+                            if (!err) {
+                                err="OK";
+                            }
+                            pulledLangs.push({lang:lang, path:path, error:err});
+                            callback();
+                        })
+                    }
+
+                    async.each(locales, iterator, function(err){
+                        if (err){
+                            callback(err);
+                        }else{
+                            callback(null, pulledLangs);
+                        }
+                    });
+               }
+            });
+        }
+    });
+
+};
+
 
 
 //#--------------------------------------------------
@@ -224,33 +362,97 @@ getFile = function(project, lang, saveTo, callback) {
 //#   path    - path where the data file should be read from
 //#   lang    - language code
 //#   callback(err) - return error on problems enountered
-uploadFile = function(project, path, lang, callback) {
-    var args;
-    if ((typeof auth_token === "undefined" || auth_token === null) || (typeof account === "undefined" || account === null)) {
-        callback("You need to login first");
-        return;
+uploadSrcFile = function(project, lang, srcPath,  options,  callback) {
+    if (_.isFunction(options)) {
+        callback = options;
+        options = {};
     }
-    args = {
-        path: {
-            account: account,
-            project: project,
-            lang: lang
-        },
-        parameters: {
-            auth_token: auth_token
-        }
-    };
-    return client.get("https://api.lingohub.com/v1/${account}/projects/${project}/resources/${lang}.i18n.json", args, function(data, response) {
-        if (response.statusCode !== 200) {
-            return callback({
-                code: response.statusCode,
-                message: "Error. Status Code: " + response.statusCode + " " + response.statusMessage
-            });
+
+    getLoginData(options, function(err, authObj) {
+        if (err) {
+            return callback(err);
         } else {
-            return callback(null, data);
+            readTranslationFile(srcPath, lang, function(err, path,  data){
+                if (err){
+                    callback(err);
+                }else{
+                    formData = {
+                        iso2_slug: lang,
+                        path: "",
+                        file: {
+                            value: data,
+                            options:{
+                                filename: lang+'.i18n.json',
+                                contentType: 'application/json'
+                            }
+                        }
+                    };
+
+                    request.post({url:'https://api.lingohub.com/v1/'+ authObj.account +'/projects/'+ project +'/resources.json?auth_token='+authObj.token, formData: formData}, function optionalCallback(err, httpResponse, body) {
+                        if (err) {
+                            callback(err);
+                        }else{
+                            callback(null, path);
+                        }
+
+                    });
+                }
+            });
+
         }
     });
 };
+
+//#--------------------------------------------------
+//# pull all transalations for a project and save it to localdirectory.
+//# @params
+//#   project   - name of the project
+//#   saveTo [optional] - path where the data should be saved, if the parameter is not available it will save the code to local i18n directory
+//#   callback(err, data) - return error or buffer
+pushAllFiles = function(project,  srcPath, options, callback) {
+
+    if (_.isFunction(options)) {
+        callback = options;
+        options = {};
+    }
+
+    getLoginData(options, function(err, authObj) {
+        if (err) {
+            return callback(err);
+        } else {
+
+            getProjectLocales(project, options, function(err, locales){
+                if (err){
+                    callback(err);
+                } else{
+                    var pushedLangs = [];
+
+                    function iterator (lang, callback){
+                        uploadSrcFile(project, lang, srcPath, options,function(err, path){
+                            if (!err) {
+                                err="OK";
+                            }
+                            pushedLangs.push({lang:lang, path:path, error:err});
+                            callback();
+
+                        })
+                    }
+
+                    async.each(locales, iterator, function(err){
+                        if (err){
+                            callback(err);
+                        }else{
+                            callback(null, pushedLangs);
+                        }
+                    });
+                }
+            });
+        }
+    });
+
+};
+
+
 
 
 
@@ -261,6 +463,9 @@ exports.getLoginData = getLoginData;
 exports.projects = projects;
 exports.getProject = getProject;
 exports.getProjectLocales = getProjectLocales;
-exports.getFile = getFile;
-exports.uploadFile = uploadFile;
+exports.getTranslationFile = getTranslationFile;
+exports.uploadSrcFile = uploadSrcFile;
+exports.saveTranslationToFile = saveTranslationToFile;
+exports.pullAllTransaltions = pullAllTransaltions;
+exports.pushAllFiles = pushAllFiles;
 exports.auth_token_path = auth_token_path;

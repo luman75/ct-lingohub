@@ -168,3 +168,108 @@ describe 'Basic operations on lingohub', ->
 
       lingohub.projects (err, data) ->
 
+
+  describe 'saveTranslationToFile', ->
+    data = new Buffer('this is a test');
+
+    beforeEach ->
+      mockfs { }
+
+    afterEach ->
+      mockfs.restore()
+
+    it "should exist saveTranslationToFile operation ", (done) ->
+      lingohub.saveTranslationToFile.should.exist
+      done()
+
+    it "should be able to save to file data if path is provided ", (done) ->
+      mockfs { }
+      saveToPath = "/d1/d2/d3/test.i18n.json"
+      lang = "es";
+
+      lingohub.saveTranslationToFile saveToPath, data, lang, (err, path) ->
+        should.not.exist err
+        path.should.equal saveToPath
+        fs.readFile path, (err, rdata) ->
+          should.not.exists err
+          rdata.should.deepEqual data
+          done()
+
+    it "should be able to save to file data if path is provided and the destination file already exists", (done) ->
+      saveToPath = "/d1/d2/d3/test.i18n.json"
+      mockfs {"#{saveToPath}" : "existing data" }
+      lang = "es";
+
+      lingohub.saveTranslationToFile saveToPath, data, lang, (err, path) ->
+        should.not.exist err
+        path.should.equal saveToPath
+        fs.readFile path, (err, rdata) ->
+          should.not.exists err
+          rdata.should.deepEqual data
+          done()
+
+    it.only "should generate error when the destination path exists but it's a directory", (done) ->
+      saveToPath = "/d1/d2/d3/test.i18n.json"
+      mockfs {"#{saveToPath}" : {} } # create a fake directory under the same name
+      lang = "es";
+
+      lingohub.saveTranslationToFile saveToPath, data, lang, (err, path) ->
+        should.exist err
+        done()
+
+
+    it "should be able to save to file data to default path ", (done) ->
+      mockfs { }
+      lang = "es";
+
+      lingohub.saveTranslationToFile null, data, lang, (err, path) ->
+        should.not.exist err
+        path.should.equal "i18n/#{lang}.i18n.json"
+        fs.readFile path, (err, rdata) ->
+          should.not.exists err
+          rdata.should.deepEqual data
+          done()
+
+
+  describe 'getTranslationFile operation', ->
+    sampleAuth = {account: "myaccount", token: "mytoken"}
+    sampleData = new Buffer('this is a test');
+    project = "testproject"
+    lang = "es"
+    saveTo = "/mypath/i18.es.json"
+
+    beforeEach ->
+      mockfs { "#{auth_token_path}": JSON.stringify(sampleAuth) }
+
+    afterEach ->
+      mockfs.restore()
+
+    it "should getTranslationFile return error on received error form API server ", (done) ->
+      # set  a mockup which return 404
+      clientMock =
+        get: (address, args, callback) ->
+          callback(null , {statusCode:804})
+
+      lingohub.__set__ "client", clientMock
+
+      lingohub.getTranslationFile project, lang, saveTo,  (err, rpath) ->
+        should.exist err
+        err.code.should.equal 804
+        done()
+
+    it "should save received data under right path", (done) ->
+      clientMock =
+        get: (address, args, callback) ->
+          callback(sampleData , {statusCode:200})
+
+      lingohub.__set__ "client", clientMock
+
+      lingohub.getTranslationFile project, lang, saveTo,  (err, rpath) ->
+        should.not.exist err
+        saveTo.should.equal rpath
+        fs.readFile rpath, (err, rdata) ->
+          should.not.exists err
+          rdata.should.deepEqual sampleData
+          done()
+
+
