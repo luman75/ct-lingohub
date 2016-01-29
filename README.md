@@ -3,7 +3,12 @@
 This is command line interface for accessing and managing i18n files in LingoHub. 
 It's crafted for special requirements we had and it shouldn't be treated as a generic universal solution. 
 
+# Installation 
+```
+$ npm install -g ct-lingohub
+```
 
+After that you should have on your path avai
 
 # Getting Started
 The typical scenio looks like this:
