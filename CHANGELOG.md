@@ -4,6 +4,13 @@
 CHANGELOG
 ---------
 
+### 1.0.0
+
+* Readme ready
+* Basic expected functionality is available.
+* The fist version with full expected command set is available
+
+
 ### 0.2.2
 
 * Removed non-necessary files
